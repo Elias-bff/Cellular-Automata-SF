@@ -26,6 +26,7 @@ local rules={
     
     spawnType="random",
     spawnAmount=20,
+    seed="random",
     size=4,
     color=0
 }
@@ -132,22 +133,26 @@ function intRange(ints)
     return range
 end
 
+function math.random(seed,min,max)
+    return math.sharedRandom(tostring(seed),min,max)
+end
+
 function init()
+    local seed=rules.seed=="random" and timer.systime() or rules.seed
+    
     if string.lower(rules.spawnType)=="random" then
-        for _=1,rules.spawnAmount do
-            cells.set(Vector(math.random(0,rules.size*2)-rules.size,math.random(0,rules.size*2)-rules.size,math.random(0,rules.size*2)-rules.size),rules.states)
+        for i=1,rules.spawnAmount do
+            cells.set(Vector(math.random(seed+i,0,rules.size*2)-rules.size,math.random(seed+i*2,0,rules.size*2)-rules.size,math.random(seed+i*3,0,rules.size*2)-rules.size),rules.states)
         end
     else
-        for _,vec in pairs(string.lower(rules.neighbor)=="m" and structs.m or structs.nm) do
-            if math.random()>0.5 then
+        for i,vec in pairs(string.lower(rules.neighbor)=="m" and structs.m or structs.nm) do
+            if math.random(seed+i,0,1)>0.5 then
                 cells.set(vec,rules.states)
             end
         end
     end
     
-    if rules.randomColor then
-        rules.color=math.random(0,255)
-    end
+    rules._color=rules.color=="random" and math.random(timer.systime()%255,0,255) or rules.color
 end
 
 init()
@@ -196,7 +201,7 @@ hook.add("renderoffscreen","",function()
                 render.clear(Color(0,0,0,0))
                 
                 for _, cell in pairs(cells.pool) do                    
-                    render.setColor(Color(rules.color,1/math.abs(cell.state-rules.states),1):hsvToRGB())
+                    render.setColor(Color(rules._color,1/math.abs(cell.state-rules.states),1):hsvToRGB())
                     render.draw3DBox(localToWorld(cell.pos,Angle(),chip():getPos(),chip():getAngles()),chip():getAngles(),Vector(-rules.size/(rules.size*2)),Vector(rules.size/(rules.size*2)))
                 end
                 
@@ -224,7 +229,7 @@ hook.add("renderoffscreen","",function()
         coroutine.resume(thread)
     end
     
-    if coroutine.status(thread)=="dead" then
+    if coroutine.status(thread)=="dead" and player():getPos():getDistance(chip():getPos())<100 then
         thread=nil
         step=true
     end
@@ -244,12 +249,12 @@ hook.add("PlayerChat","",function(ply,text)
             spawn=intRange(spawn),
             states=tonumber(_rules[3]) or rules.states,
             neighbor=_rules[4][1] or rules.neighbor,
-            
-            spawnType=packet[3] or rules.spawnType,
-            spawnAmount=packet[4] and (string.find(packet[4],"%%") and ((tonumber(packet[5]) or rules.size)*2)^3*tonumber(string.replace(packet[4],"%",""))/100 or packet[4]) or rules.spawnAmount,
-            size=tonumber(packet[5]) or rules.size,
-            randomColor=(packet[6]=="true" or false) or rules.randomColor,
-            color=tonumber(packet[7]) or rules.color
+
+            seed=(packet[3]=="random" and packet[3] or tonumber(packet[3])) or rules.seed,
+            spawnType=packet[4] or rules.spawnType,
+            spawnAmount=packet[5] and (string.find(packet[5],"%%") and ((tonumber(packet[6]) or rules.size)*2)^3*tonumber(string.replace(packet[5],"%",""))/100 or packet[5]) or rules.spawnAmount,
+            size=tonumber(packet[6]) or rules.size,
+            color=(packet[7]=="random" and "random" or tonumber(packet[7])) or rules.color
         }
         
         rules.pretty=table.toString(rules.survive).." / "..table.toString(rules.spawn).." / "..rules.states
