@@ -24,8 +24,8 @@ local rules={
     states=5,
     neighbor="M",
     
-    spawnType="random",
-    spawnAmount=20,
+    spawnType="center",
+    spawnAmount=200,
     seed="random",
     size=4,
     color=0
@@ -152,6 +152,8 @@ function init()
         end
     end
     
+    printConsole(Color(173,255,47),"[Seed: "..seed.."]:",Color(255,255,255)," Created: ",Color(timer.realtime()*10,1,1):hsvToRGB(),table.count(cells.pool),Color(255,255,255)," cells.\n    ",Color(132,255,133),"-> Rules: "..rules.pretty.." | "..rules.seed.."/"..rules.spawnType.."/"..rules.spawnAmount)
+    
     rules._color=rules.color=="random" and math.random(timer.systime()%255,0,255) or rules.color
 end
 
@@ -168,7 +170,7 @@ timer.create("",0.1,0,function()
                     cells.set(vec+cell.pos,rules.states)
                 end
                 
-                if neighbourCell and neighbourCell.state>rules.states-2 and #rules.survive!=0 and !table.hasValue(rules.survive,neighbours) then
+                if neighbourCell and neighbourCell.state==rules.states and #rules.survive!=0 and !table.hasValue(rules.survive,neighbours) then
                     cells.set(neighbourCell.pos,rules.states-1)
                 end
             end
@@ -194,7 +196,7 @@ hook.add("renderoffscreen","",function()
     if !space then
         return
     end
-    
+
     if !thread then
         thread=coroutine.create(function()
             space:draw(function()
@@ -220,6 +222,14 @@ hook.add("renderoffscreen","",function()
                 render.drawText(display[1].x,display[1].y,table.count(cells.pool),1)
                 render.drawText(display[2].x,display[2].y,rules.pretty,1)
                 
+                if owner():isTyping() then
+                    render.drawText(512+rules.size*30,400,"1: spawn\n    survive\n    states\n    neighbour type")
+                    render.drawText(512-rules.size*30-30,400,"seed: 2\nspawn type: 3\nspawn amount: 4\nsize: 5\ncolor: 6",2)
+                    
+                    render.setColor(Color(timer.realtime()*20,1,1):hsvToRGB())
+                    render.drawText(512,512+rules.size*30+30,"Available arguments",1)
+                end
+                
                 coroutine.yield()
             end)
         end)
@@ -238,7 +248,7 @@ end)
 hook.add("PlayerChat","",function(ply,text)
     local packet=string.split(text," ")
     
-    if ply==owner() and packet[1]=="!rmatrix" then
+    if packet[1]=="!rmatrix" then
         local _rules=string.split(string.replace(text,"!rmatrix ",""),"/")
         local survive=string.split(_rules[1],",") or {4}
         local spawn=string.split(_rules[2],",") or {4}
