@@ -10,7 +10,6 @@ http.get("https://raw.githubusercontent.com/Elias-bff/SF-linker/main/linker.lua"
             space=render.createRenderer:new({
                 type="3d",
                 size=5,
-                scale=6,
                 pos=chip():getPos(),
             },chip())
         end
