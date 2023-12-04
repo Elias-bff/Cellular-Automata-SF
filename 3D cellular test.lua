@@ -159,8 +159,8 @@ end
 
 init()
 
-timer.create("",0.1,0,function()
-    if quotaAverage()<0.006*0.3 and step then
+function step()
+    if quotaAverage()<0.006*0.3 then
         for _,cell in pairs(table.copy(cells.pool)) do
             for _,vec in pairs(string.lower(rules.neighbor)=="m" and structs.m or structs.nm) do
                 local neighbours=cells.countNeighbours(vec+cell.pos)
@@ -187,16 +187,14 @@ timer.create("",0.1,0,function()
         if table.count(cells.pool)==0 then
             init()
         end
-        
-        step=false
     end
-end)
+end
 
 hook.add("renderoffscreen","",function()
     if !space then
         return
     end
-
+    
     if !thread then
         thread=coroutine.create(function()
             space:draw(function()
@@ -241,7 +239,8 @@ hook.add("renderoffscreen","",function()
     
     if coroutine.status(thread)=="dead" and player():getPos():getDistance(chip():getPos())<100 then
         thread=nil
-        step=true
+        
+        step()
     end
 end)
 
