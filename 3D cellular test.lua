@@ -2,11 +2,11 @@
 --@author Elias
 --@client
 
-http.get("https://raw.githubusercontent.com/Elias-bff/SF-linker/main/linker.lua",function(data)
+http.get("https://raw.githubusercontent.com/grammyy/SF-linker/main/linker.lua",function(data)
     loadstring(data)()
     
     load({
-        ["https://raw.githubusercontent.com/Elias-bff/3D-Space-Renderer-SF/main/libs/3D_Space_renderer.lua"]=function()
+        ["https://raw.githubusercontent.com/grammyy/3D-Space-Renderer-SF/main/libs/3D_Space_renderer.lua"]=function()
             space=render.createRenderer:new({
                 type="3d",
                 size=5,
